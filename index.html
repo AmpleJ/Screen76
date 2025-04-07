@@ -56,16 +56,16 @@
       color: #000;
     }
     #tabs .tab-button .close-tab {
-      background: #f55;
+      background: transparent;
       border: none;
       border-radius: 50%;
       width: 1rem;
       height: 1rem;
-      color: #fff;
       font-size: 0.8rem;
       line-height: 1rem;
       text-align: center;
       cursor: pointer;
+      padding: 0;
     }
     .canvas-wrapper {
       display: none;
@@ -77,10 +77,10 @@
       display: flex;
     }
     .canvas-controls {
-      background: #222;
-      padding: 0.5rem;
+      background: #fff;
+      padding: 0rem;
       display: flex;
-      gap: 0.5rem;
+      gap: 0rem;
     }
     .canvas {
       flex: 1;
@@ -106,24 +106,24 @@
     }
     .close-btn {
       position: absolute;
-      top: 0.3rem;
-      right: 0.3rem;
+      top: 0.1rem;
+      right: 0.1rem;
       width: 10px;
       height: 10px;
       border: none;
       border-radius: 50%;
-      background: #f55;
-      color: #fff;
+      background: transparent;
       font-weight: bold;
       line-height: 10px;
       text-align: center;
       font-size: 0.7rem;
       cursor: pointer;
+      padding: 0.1;
     }
     .card input, .card select, .card textarea {
       width: 100%;
-      padding: 0.3rem;
-      margin-bottom: 0.4rem;
+      padding: 0.2rem;
+      margin-bottom: 0.2rem;
       border: 1px solid #ccc;
       border-radius: 4px;
       background: #fff;
@@ -134,10 +134,18 @@
       resize: vertical;
       text-align: left;
     }
+    /* Centered card control buttons */
     .card-controls {
       display: flex;
-      gap: 0.5rem;
-      margin-bottom: 0.5rem;
+      justify-content: center;
+      gap: 0.2rem;
+      margin-bottom: 0.2rem;
+    }
+    .card-controls button {
+      border-radius: 4px;
+      border: none;
+      padding: 0.2rem 0.3rem;
+      cursor: pointer;
     }
     .card-header {
       font-weight: bold;
@@ -155,32 +163,31 @@
       margin-left: 0.2rem;
     }
     .cell-buttons button {
-      width: 0.8rem;
-      height: 0.8rem;
+      width: 0.6rem;
+      height: 0.6rem;
       padding: 0;
       margin: 1px 0;
       font-size: 0.6rem;
       border: none;
-      border-radius: 3px;
-      background: rgba(136, 136, 136, 0.5);
-      color: #fff;
+      border-radius: 8px;
+      background: transparent;
       cursor: pointer;
     }
     .cell-buttons button:hover {
-      background: rgba(170, 170, 170, 0.7);
+      background: rgba(170, 170, 170, 1);
     }
     .cycle {
       width: 1.2rem;
       height: 1.2rem;
       border: none;
       border-radius: 50%;
-      background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);
+      background: linear-gradient(90deg, transparent, transparent);
       color: #fff;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.8rem;
+      font-size: 1.24rem;
     }
   </style>
 </head>
@@ -206,19 +213,24 @@
     const themes = [
       {name: "High Fantasy", primary: "#fff", secondary: "#fff"},
       {name: "Dark Fantasy", primary: "#000", secondary: "#000"},
-      {name: "Celestial Moon", primary: "#a8c0ff", secondary: "#f0f8ff"},
-      {name: "Shadow Realm", primary: "#1a1a1a", secondary: "#3a3a3a"},
-      {name: "Mystic Fog", primary: "#808080", secondary: "#c0c0c0"},
-      {name: "Dragon's Blood", primary: "#8b0000", secondary: "#ff4d4d"},
-      {name: "Sunfire", primary: "#ff8c00", secondary: "#ffe0b2"},
-      {name: "Enchanted Forest", primary: "#228B22", secondary: "#a8d5ba"},
-      {name: "Oceanic Depths", primary: "#0000cd", secondary: "#89cff0"},
-      {name: "Twilight Violet", primary: "#8a2be2", secondary: "#d3a4ff"},
-      {name: "Mystic Amethyst", primary: "#800080", secondary: "#e0aaff"},
-      {name: "Frostbite", primary: "#00ced1", secondary: "#b2ffff"},
-      {name: "Emerald Dream", primary: "#50c878", secondary: "#b7e1cd"},
-      {name: "Ruby Radiance", primary: "#ff0000", secondary: "#ffb3b3"},
-      {name: "Golden Dawn", primary: "#ffd700", secondary: "#fffacd"}
+        { name: "Mystic Fog", primary: "#808080", secondary: "#c0c0c0" },
+        { name: "Celestial Moon", primary: "#fff", secondary: "#a8c0ff" },
+        { name: "Shadow Realm", primary: "#1B0A2A", secondary: "#B39DDB" },
+        { name: "Dragon's Blood", primary: "#8b0000", secondary: "#ff4d4d" },
+        { name: "Ruby Radiance", primary: "#ff0000", secondary: "#ffb3b3" },
+        { name: "Sunfire Blaze", primary: "#ff8c00", secondary: "#ffe0b2" },
+        { name: "Golden Dawn", primary: "#ffd700", secondary: "#fffacd" },
+        { name: "Enchanted Forest", primary: "#0B3D0B", secondary: "#a8d5ba" },
+        { name: "Emerald Dream", primary: "#50c878", secondary: "#b7e1cd" },
+        { name: "Frost Crystal", primary: "#00ced1", secondary: "#b2ffff" },
+        { name: "Oceanic Depths", primary: "#0000cd", secondary: "#89cff0" },
+        { name: "Twilight Violet", primary: "#8a2be2", secondary: "#d3a4ff" },
+        { name: "Mystic Amethyst", primary: "#800080", secondary: "#e0aaff" },
+        { name: "Living Earth", primary: "#5C4033", secondary: "#E6BE8A" },   
+	{ name: "Soft Tunic", primary: "#F5F5DC", secondary: "#A9746E" },   
+	{ name: "Faery Magic", primary: "#ECECFB", secondary: "#C0E8F9" },   
+	{ name: "Herbal Tincture", primary: "#D8E3C4", secondary: "#C8EAFE" },   
+	{ name: "Valiant Soul", primary: "#E5F6ED", secondary: "#F25C5C" }  
     ];
 
     // --- Tab management ---
@@ -281,7 +293,7 @@
     window.addEventListener('DOMContentLoaded', loadTabs);
 
     // --- Card creation function ---
-    // Accepts optional data and an optional position index
+    // Accepts optional data and an optional position index.
     function addCard(data = null, pos = null) {
       if (!currentTab) return;
       const idx = cardCount++;
@@ -296,21 +308,21 @@
           <select onchange="updatePrimaryTheme(this)" aria-label="Primary Theme">
             ${themes.map(t => `<option value="${t.primary}" data-secondary="${t.secondary}">${t.name}</option>`).join('')}
           </select>
-          <button onclick="cycleTheme(this)" class="cycle">֍</button>
+          <button onclick="cycleTheme(this)" class="cycle">☼</button>
           <select onchange="updateSecondaryTheme(this)" aria-label="Secondary Theme">
             ${themes.map(t => `<option value="${t.secondary}" data-primary="${t.primary}">${t.name}</option>`).join('')}
           </select>
         </div>
-        <!-- Moved controls: Generate Stats, Reset Card, Refit Card -->
+        <!-- Moved controls: Generate Stats, Reset Card, Resize Card -->
         <div class="card-controls">
           <button onclick="generateStats(this)">Generate Stats</button>
           <button onclick="resetCard(this)">Reset Card</button>
-          <button onclick="refitCard(this)">Refit Card</button>
+          <button onclick="resizeCard(this)">Resize Card</button>
         </div>
         ${makeSection('Stats', idx, ['STR','DEX','CON','INT','WIS','CHA'], 6, true, data)}
         ${makeSection('Attributes', idx, ['HP','AC','DC','PP','Ammo','Charge'], 6, false, data)}
         ${makeSpellSlots(idx, data)}
-        ${makeSection('Funds', idx, ['P','G','E','S','C'], 5, false, data)}
+        ${makeSection('Funds', idx, ['Platinum','Gold','Electrum','Silver','Copper'], 5, false, data)}
         <label>Actions:</label><textarea>${data?.actions || ''}</textarea>
         <label>Spells:</label><textarea>${data?.spells || ''}</textarea>
         <label>Inventory:</label><textarea>${data?.inventory || ''}</textarea>
@@ -327,7 +339,7 @@
         canvas.insertBefore(card, canvas.children[pos]);
       }
       addDragAndDrop(card);
-      // If the card was loaded from storage, reinitialize drag listeners for its cells
+      // Reattach drag listeners for math inputs.
       card.querySelectorAll('.math-input').forEach(input => {
         input.setAttribute("ondragstart", "dragCell(event)");
         input.setAttribute("ondrop", "dropCell(event)");
@@ -365,7 +377,7 @@
       saveState();
     }
 
-    function refitCard(btn) {
+    function resizeCard(btn) {
       const c = btn.closest('.card');
       c.style.width = ''; 
       c.style.height = '';
@@ -378,10 +390,9 @@
       saveState();
     }
 
-    // Generate Stats now sets a tooltip with the dice breakdown.
+    // Generate Stats sets a tooltip with the dice breakdown.
     function generateStats(btn) {
       const card = btn.closest('.card');
-      // Target inputs in the first details (Stats) section.
       card.querySelectorAll('details:nth-of-type(1) input').forEach(i => {
         const rolls = Array.from({length: 4}, () => Math.ceil(Math.random() * 6)).sort((a, b) => b - a);
         const sum = rolls.slice(0, 3).reduce((a, b) => a + b, 0);
@@ -391,7 +402,7 @@
       saveState();
     }
 
-    // When a math cell is dropped onto another, swap both value and tooltip.
+    // Swap both value and tooltip on cell drop.
     function dropCell(e) {
       e.preventDefault();
       const src = document.getElementById(e.dataTransfer.getData('id'));
@@ -465,7 +476,7 @@
           <div class="cell-wrapper">
             <input type="text" class="math-input" id="${id}" value="${val}"
               onblur="evaluateMath(this)" draggable="true" ondragstart="dragCell(event)" ondrop="dropCell(event)" ondragover="allowDrop(event)"
-              title="Supports math (e.g. 5+3+2(1))"/>
+              title="Try 2+2"/>
             <div class="cell-buttons">
               <button onclick="changeCell(this,1)">+</button>
               <button onclick="changeCell(this,-1)">−</button>
@@ -475,7 +486,7 @@
     }
 
     function makeSpellSlots(idx, data) {
-      const labels = ['C', 1, 2, 3, 4, 5, 6, 7, 8, 9];
+      const labels = ['S', '1ˢᵗ', '2ⁿᵈ', '3ʳᵈ', '4ᵗʰ', '5ᵗʰ', '6ᵗʰ', '7ᵗʰ', '8ᵗʰ', '9ᵗʰ'];
       return `
         <details>
           <summary class="card-header">Spell Slots</summary>
@@ -490,6 +501,7 @@
         </details>`;
     }
 
+    // Update primary theme and update the close button and ± buttons.
     function updatePrimaryTheme(sel) {
       const card = sel.closest('.card');
       const idx = sel.selectedIndex;
@@ -497,12 +509,22 @@
       const bg = `linear-gradient(135deg,${theme.primary},${theme.secondary})`;
       card.style.background = bg;
       card.style.color = contrastColor(theme.primary);
+      // Update close button color based on contrast with primary.
+      const closeBtn = card.querySelector('.close-btn');
+      if (closeBtn) closeBtn.style.color = contrastColor(theme.primary);
+      // Update the ± buttons (inside .cell-buttons) to have transparent background and dynamic text color.
+      const cellBtns = card.querySelectorAll('.cell-buttons button');
+      cellBtns.forEach(btn => {
+        btn.style.backgroundColor = 'transparent';
+        btn.style.color = contrastColor(theme.primary);
+      });
     }
 
+    // Update secondary theme and update buttons (including control buttons) to match.
     function updateSecondaryTheme(sel) {
       const card = sel.closest('.card');
       const color = sel.value || '';
-      card.querySelectorAll('input,select,textarea').forEach(el => {
+      card.querySelectorAll('input,select,textarea, button:not(.close-btn)').forEach(el => {
         el.style.backgroundColor = color;
         el.style.borderColor = color;
         el.style.color = contrastColor(color);
