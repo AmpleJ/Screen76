@@ -134,14 +134,10 @@
       resize: vertical;
       text-align: left;
     }
-    .card-footer {
+    .card-controls {
       display: flex;
       gap: 0.5rem;
-      flex-wrap: wrap;
-      margin-top: 0.4rem;
-    }
-    .card-footer button {
-      border-radius: 8px;
+      margin-bottom: 0.5rem;
     }
     .card-header {
       font-weight: bold;
@@ -239,14 +235,12 @@
 
     function createTab(name) {
       if (document.querySelector(`[data-name="${name}"]`)) return;
-
       const btn = document.createElement('button');
       btn.className = 'tab-button';
       btn.dataset.name = name;
       btn.innerHTML = `${name} <span class="close-tab" onclick="deleteTab(event, '${name}')">×</span>`;
       btn.onclick = () => switchTab(name);
       tabs.appendChild(btn);
-
       const wrapper = document.createElement('div');
       wrapper.id = 'wrap-' + name;
       wrapper.className = 'canvas-wrapper';
@@ -286,10 +280,10 @@
 
     window.addEventListener('DOMContentLoaded', loadTabs);
 
-    // --- Card functions ---
-    function addCard(data = null) {
+    // --- Card creation function ---
+    // Accepts optional data and an optional position index
+    function addCard(data = null, pos = null) {
       if (!currentTab) return;
-
       const idx = cardCount++;
       const card = document.createElement('article');
       card.className = 'card';
@@ -307,15 +301,16 @@
             ${themes.map(t => `<option value="${t.secondary}" data-primary="${t.primary}">${t.name}</option>`).join('')}
           </select>
         </div>
-        ${makeSection('Stats', idx, ['STR','DEX','CON','INT','WIS','CHA'], 6, true, data)}
-        ${makeSection('Attributes', idx, ['HP','AC','DC','PP','Ammo','Charge'], 6, false, data)}
-        ${makeSpellSlots(idx, data)}
-        ${makeSection('Funds', idx, ['P','G','E','S','C'], 5, false, data)}
-        <div class="card-footer">
+        <!-- Moved controls: Generate Stats, Reset Card, Refit Card -->
+        <div class="card-controls">
           <button onclick="generateStats(this)">Generate Stats</button>
           <button onclick="resetCard(this)">Reset Card</button>
           <button onclick="refitCard(this)">Refit Card</button>
         </div>
+        ${makeSection('Stats', idx, ['STR','DEX','CON','INT','WIS','CHA'], 6, true, data)}
+        ${makeSection('Attributes', idx, ['HP','AC','DC','PP','Ammo','Charge'], 6, false, data)}
+        ${makeSpellSlots(idx, data)}
+        ${makeSection('Funds', idx, ['P','G','E','S','C'], 5, false, data)}
         <label>Actions:</label><textarea>${data?.actions || ''}</textarea>
         <label>Spells:</label><textarea>${data?.spells || ''}</textarea>
         <label>Inventory:</label><textarea>${data?.inventory || ''}</textarea>
@@ -326,9 +321,18 @@
         console.error(`Canvas for tab "${currentTab}" not found`);
         return;
       }
-      canvas.append(card);
+      if (pos === null || pos >= canvas.children.length) {
+        canvas.append(card);
+      } else {
+        canvas.insertBefore(card, canvas.children[pos]);
+      }
       addDragAndDrop(card);
-
+      // If the card was loaded from storage, reinitialize drag listeners for its cells
+      card.querySelectorAll('.math-input').forEach(input => {
+        input.setAttribute("ondragstart", "dragCell(event)");
+        input.setAttribute("ondrop", "dropCell(event)");
+        input.setAttribute("ondragover", "allowDrop(event)");
+      });
       const primarySelect = card.querySelector('select:first-of-type');
       const secondarySelect = card.querySelector('select:nth-of-type(2)');
       if (data?.primaryIndex) primarySelect.selectedIndex = data.primaryIndex;
@@ -338,6 +342,7 @@
       saveState();
     }
 
+    // --- Card functions ---
     function removeCard(btn) {
       btn.closest('.card').remove();
       saveState();
@@ -350,12 +355,13 @@
       saveState();
     }
 
+    // Reset Card: Replace the card with a new one in the same position.
     function resetCard(btn) {
-      const card = btn.closest('.card');
-      card.querySelectorAll('input.math-input').forEach(i => i.value = '0');
-      card.querySelectorAll('input[type="text"]:not(.math-input),textarea').forEach(i => i.value = '');
-      card.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
-      updatePrimaryTheme(card.querySelector('select'));
+      const oldCard = btn.closest('.card');
+      const canvas = oldCard.parentElement;
+      const pos = Array.from(canvas.children).indexOf(oldCard);
+      oldCard.remove();
+      addCard(null, pos);
       saveState();
     }
 
@@ -372,18 +378,42 @@
       saveState();
     }
 
-    // Updated generateStats to include tooltip with dice breakdown.
+    // Generate Stats now sets a tooltip with the dice breakdown.
     function generateStats(btn) {
       const card = btn.closest('.card');
-      // Assuming stats are in the first details section.
+      // Target inputs in the first details (Stats) section.
       card.querySelectorAll('details:nth-of-type(1) input').forEach(i => {
         const rolls = Array.from({length: 4}, () => Math.ceil(Math.random() * 6)).sort((a, b) => b - a);
         const sum = rolls.slice(0, 3).reduce((a, b) => a + b, 0);
         i.value = sum;
-        // Set tooltip: used rolls and the dropped roll in parenthesis.
         i.title = `${rolls[0]},${rolls[1]},${rolls[2]}(${rolls[3]})`;
       });
       saveState();
+    }
+
+    // When a math cell is dropped onto another, swap both value and tooltip.
+    function dropCell(e) {
+      e.preventDefault();
+      const src = document.getElementById(e.dataTransfer.getData('id'));
+      const tgt = e.target.closest('input');
+      if (src && tgt) {
+        const tempVal = src.value;
+        const tempTitle = src.title;
+        src.value = tgt.value;
+        src.title = tgt.title;
+        tgt.value = tempVal;
+        tgt.title = tempTitle;
+        saveState();
+      }
+    }
+
+    function dragCell(e) {
+      e.dataTransfer.setData('text', e.target.value);
+      e.dataTransfer.setData('id', e.target.id);
+    }
+
+    function allowDrop(e) { 
+      e.preventDefault(); 
     }
 
     function evaluateMath(input) {
@@ -413,27 +443,6 @@
       });
     }
 
-    function dragCell(e) {
-      e.dataTransfer.setData('text', e.target.value);
-      e.dataTransfer.setData('id', e.target.id);
-    }
-
-    function dropCell(e) {
-      e.preventDefault();
-      const val = e.dataTransfer.getData('text');
-      const id = e.dataTransfer.getData('id');
-      const tgt = e.target.closest('input');
-      if (tgt) {
-        const src = document.getElementById(id);
-        [src.value, tgt.value] = [tgt.value, src.value];
-        saveState();
-      }
-    }
-
-    function allowDrop(e) { 
-      e.preventDefault(); 
-    }
-
     // --- Section and Theme Helpers ---
     function makeSection(title, idx, headers, count, open = false, data = null) {
       return `
@@ -455,7 +464,7 @@
         <td>
           <div class="cell-wrapper">
             <input type="text" class="math-input" id="${id}" value="${val}"
-              onblur="evaluateMath(this)" draggable="true" ondragstart="dragCell(event)" 
+              onblur="evaluateMath(this)" draggable="true" ondragstart="dragCell(event)" ondrop="dropCell(event)" ondragover="allowDrop(event)"
               title="Supports math (e.g. 5+3+2(1))"/>
             <div class="cell-buttons">
               <button onclick="changeCell(this,1)">+</button>
@@ -529,10 +538,19 @@
     function loadState(tabName) {
       const saved = localStorage.getItem('dmCards_' + tabName);
       if (saved) {
-        document.getElementById('canvas-' + tabName).innerHTML = saved;
+        const canvas = document.getElementById('canvas-' + tabName);
+        canvas.innerHTML = saved;
+        // Reattach drag/drop events for cards and cells
+        canvas.querySelectorAll('.card').forEach(card => {
+          addDragAndDrop(card);
+          card.querySelectorAll('.math-input').forEach(input => {
+            input.setAttribute("ondragstart", "dragCell(event)");
+            input.setAttribute("ondrop", "dropCell(event)");
+            input.setAttribute("ondragover", "allowDrop(event)");
+          });
+        });
       }
     }
   </script>
 </body>
 </html>
-
